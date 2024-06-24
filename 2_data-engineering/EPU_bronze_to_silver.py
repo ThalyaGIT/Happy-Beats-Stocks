@@ -17,26 +17,28 @@ df.set_index('Date', inplace=True)
 # Resample the data to get the last closing price of each week (last trading day of each week)
 weekly_df = df['EPU Index'].resample('W-FRI').last()
 
+# Resample the original daily data to get the last closing price of each day
+daily_df = df['EPU Index'].resample('D').last()
+
 # Create a new DataFrame to store the required columns
 result_df = pd.DataFrame()
-result_df['End of Week Date'] = weekly_df.index
-result_df['EOW EPU Index'] = weekly_df.values
+result_df['Date'] = daily_df.index
+result_df['EPU Index'] = daily_df.values
 
-# Shift the 'This Week's End of Week Closing' column to get the 'Previous End of Week Closing'
-result_df['Previous EOW EPU Index'] = result_df['EOW EPU Index'].shift(1)
+# Shift the 'EPU Index' column to get the 'Previous Day's EPU Index'
+result_df['Previous Day EPU Index'] = result_df['EPU Index'].shift(1)
 
-# Calculate the EPU_Change from the previous week's closing
-result_df['EPU_Change'] = (result_df['EOW EPU Index'] - result_df['Previous EOW EPU Index'])
+# Calculate the EPU Change from the previous day's closing
+result_df['EPU Change'] = result_df['EPU Index'] - result_df['Previous Day EPU Index']
 
 # Keep only relevant Columns
-result_df = result_df[['End of Week Date', 'EPU_Change']]
+result_df = result_df[['Date', 'EPU Change']]
 
-# Drop the first row since it won't have a 'Previous End of Week Closing'
+# Drop the first row since it won't have a 'Previous Day EPU Index'
 result_df.dropna(inplace=True)
 
 # Reset the index to have a clean DataFrame
 result_df.reset_index(drop=True, inplace=True)
-
 
 # Define the path to save the new CSV file in the "silver" folder
 silver_folder = os.path.join(os.path.dirname(__file__), '..', '0-data-silver')
